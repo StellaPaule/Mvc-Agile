@@ -1,38 +1,40 @@
-# ASP.NET Core (.NET Framework)
-# Build and test ASP.NET Core projects targeting the full .NET Framework.
-# Add steps that publish symbols, save build artifacts, and more:
-# https://docs.microsoft.com/azure/devops/pipelines/languages/dotnet-core
-
 trigger:
   branches:
     include:
-      - main  # Trigger this pipeline when changes are pushed to the 'main' branch
+      - main
 
 pool:
-  name: 'COMP367-Pstellak'  # Use your self-hosted agent pool for this pipeline
+  name: 'COMP367-Pstellak'  # Use self-hosted agent pool
 
 steps:
+# Install .NET SDK 8.0.x to ensure compatibility
 - task: UseDotNet@2
   inputs:
     packageType: 'sdk'
-    version: '6.x'  # Use .NET 6 SDK
+    version: '8.x'  # Install .NET SDK 8.x
     installationPath: $(Agent.ToolsDirectory)/dotnet
 
-# Build the project(s)
+# Restore dependencies
+- task: DotNetCoreCLI@2
+  inputs:
+    command: 'restore'
+    projects: '**/*.csproj'
+
+# Build the project
 - task: DotNetCoreCLI@2
   inputs:
     command: 'build'
-    projects: '**/*.csproj'  # Build all .csproj files in the repository
+    projects: '**/*.csproj'
 
-# Publish the project(s)
+# Publish the project
 - task: DotNetCoreCLI@2
   inputs:
     command: 'publish'
     publishWebProjects: true
-    arguments: '--configuration Release --output $(Build.ArtifactStagingDirectory)'  # Publish with Release configuration
+    arguments: '--configuration Release --output $(Build.ArtifactStagingDirectory)'
 
-# Publish the build artifact so it can be consumed by the release pipeline
+# Publish build artifacts for deployment
 - task: PublishBuildArtifacts@1
   inputs:
-    artifactName: 'drop'  # Name the artifact as 'drop'
-    publishLocation: 'Container'  # Publish the artifact to the build container
+    artifactName: 'drop'
+    publishLocation: 'Container'
