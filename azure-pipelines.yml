@@ -4,17 +4,17 @@ trigger:
       - main
 
 pool:
-  name: 'COMP367-Pstellak'  # Use self-hosted agent pool
+  name: 'COMP367-Pstellak' 
 
 steps:
-# Install .NET SDK 8.0.x to ensure compatibility
+
 - task: UseDotNet@2
   inputs:
     packageType: 'sdk'
     version: '8.x'  # Install .NET SDK 8.x
     installationPath: $(Agent.ToolsDirectory)/dotnet
 
-# Restore dependencies
+# Restore NuGet packages for the project
 - task: DotNetCoreCLI@2
   inputs:
     command: 'restore'
