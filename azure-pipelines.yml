@@ -1,42 +1,22 @@
-trigger: none
+trigger:
+- main
 
-resources:
-  pipelines:
-    - pipeline: buildPipeline  # Alias for the referenced pipeline
-      source: Stella_Question2  # Ensure this matches the name of the pipeline you're referencing
-      trigger: none
+pool:
+  name:  COMP367-Pstellak  # your self-hosted agent pool
 
-stages:
-- stage: DeployWebApp
-  displayName: "Deploy to Environment (Virtual Machine)"
-  jobs:
-  - deployment: DeployASPNetApp
-    displayName: "Deploy to Lab4Environment VM"
-    environment:
-      name: Lab4Environment
-      resourceType: virtualMachine
-    strategy:
-      runOnce:
-        deploy:
-          steps:
-          - download: buildPipeline  # Download the artifact from the referenced pipeline
-            artifact: drop  # Ensure this matches the artifact name from the build pipeline
+steps:
+- task: UseDotNet@2
+  inputs:
+    packageType: 'sdk'
+    version: '8.x.x'
 
-          # Create the folder before copying
-          - task: PowerShell@2
-            inputs:
-              targetType: 'inline'
-              script: |
-                New-Item -ItemType Directory -Force -Path "C:\Deployments\MyWebApp"
+- script: dotnet build
+  displayName: 'Build app'
 
-          - task: CopyFiles@2
-            inputs:
-              SourceFolder: '$(Pipeline.Workspace)/drop'
-              Contents: '**'
-              TargetFolder: 'C:\\Deployments\\MyWebApp'
+- script: dotnet publish -c Release -o $(Build.ArtifactStagingDirectory)
+  displayName: 'Publish app'
 
-          - task: PowerShell@2
-            inputs:
-              targetType: 'inline'
-              script: |
-                Write-Host "✅ Deployment complete to C:\\Deployments\\MyWebApp"
+- task: PublishBuildArtifacts@1
+  inputs:
+    PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+    ArtifactName: 'drop'
